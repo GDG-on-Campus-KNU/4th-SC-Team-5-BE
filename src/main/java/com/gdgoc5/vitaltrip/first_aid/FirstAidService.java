@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyChatMessage;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyChatSession;
+import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyManual;
+import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyType;
 import com.gdgoc5.vitaltrip.first_aid.repository.EmergencyChatMessageRepository;
 import com.gdgoc5.vitaltrip.first_aid.repository.EmergencyChatSessionRepository;
+import com.gdgoc5.vitaltrip.first_aid.repository.EmergencyManualRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -28,12 +31,15 @@ public class FirstAidService {
 
     private final EmergencyChatSessionRepository sessionRepository;
     private final EmergencyChatMessageRepository messageRepository;
+    private final EmergencyManualRepository manualRepository;
 
     @Autowired
     public FirstAidService(EmergencyChatSessionRepository sessionRepository,
-                           EmergencyChatMessageRepository messageRepository) {
+                           EmergencyChatMessageRepository messageRepository,
+                           EmergencyManualRepository manualRepository) {
         this.sessionRepository = sessionRepository;
         this.messageRepository = messageRepository;
+        this.manualRepository = manualRepository;
     }
 
     public Map<String, Object> getEmergencyChatAdvice(String emergencyType, String userMessage) {
@@ -264,5 +270,12 @@ public class FirstAidService {
         return result;
     }
 
+    public EmergencyManual getManualByEmergencyType(EmergencyType emergencyType) {
+        return manualRepository.findByEmergencyType(emergencyType)
+                .orElseThrow(() -> new IllegalArgumentException("해당 응급상황 유형의 매뉴얼이 존재하지 않습니다."));
+    }
 
+    public List<EmergencyManual> getAllManuals() {
+        return manualRepository.findAll();
+    }
 }
