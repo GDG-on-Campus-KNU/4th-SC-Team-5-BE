@@ -1,0 +1,22 @@
+### AI 응급처치 상담 테스트
+POST http://localhost:8080/first-aid/chat
+Content-Type: application/json
+
+{
+  "emergencyType": "BURNS",
+  "userMessage": "화상 부위가 부어오르고 통증이 심해요. 병원 가야 하나요?"
+}
+
+
+### AI 응급상담 전체 메시지 조회
+GET http://localhost:8080/first-aid/chat/a3030e97-0e7d-4528-9e16-3708f20b1a68
+Accept: application/json
+
+
+### 응급 상담 계속하기
+POST http://localhost:8080/first-aid/chat/a3030e97-0e7d-4528-9e16-3708f20b1a68
+Content-Type: application/json
+
+{
+  "userMessage": "물집이 터졌는데 어떻게 해야 하나요?"
+}
