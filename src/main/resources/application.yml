@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: vitaltrip
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
