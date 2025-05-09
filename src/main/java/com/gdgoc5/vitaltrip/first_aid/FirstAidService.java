@@ -2,6 +2,9 @@ package com.gdgoc5.vitaltrip.first_aid;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gdgoc5.vitaltrip.exception.NotFoundException;
+import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatAdviceResponse;
+import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatMessageResponse;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyChatMessage;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyChatSession;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyManual;
@@ -42,13 +45,9 @@ public class FirstAidService {
         this.manualRepository = manualRepository;
     }
 
-    public Map<String, Object> getEmergencyChatAdvice(String emergencyType, String userMessage) {
+    public EmergencyChatAdviceResponse getEmergencyChatAdvice(String emergencyType, String userMessage) {
         if (userMessage == null || userMessage.trim().isEmpty()) {
-            Map<String, Object> failResponse = new HashMap<>();
-            failResponse.put("message", "userMessage는 필수 입력값입니다.");
-            failResponse.put("data", null);
-            failResponse.put("result", "FAIL");
-            return failResponse;
+            throw new IllegalArgumentException("userMessage는 필수 입력값입니다.");
         }
 
         WebClient webClient = WebClient.builder()
@@ -56,43 +55,24 @@ public class FirstAidService {
                 .defaultHeader("Content-Type", "application/json")
                 .build();
 
-        String prompt = "다음 응급 상황에 대해 의학적인 조언을 제공해주세요.\n" +
-                "- 응급 상황 유형: " + emergencyType + "\n" +
-                "- 사용자 메시지: \"" + userMessage + "\"\n" +
-                "응답은 반드시 아래 JSON 형식으로 반환해주세요.\n" +
-                "{\n" +
-                "  \"c\": \"조언 텍스트\",\n" +
-                "  \"recommendedAction\": \"권장 행동\",\n" +
-                "  \"confidence\": 숫자 (0.0 ~ 1.0)\n" +
-                "}";
-
-        Map<String, Object> payload = Map.of(
-            "contents", java.util.List.of(
-                Map.of("parts", java.util.List.of(Map.of("text", prompt)))
-            )
-        );
+        Map<String, Object> payload = makePromptForGemini(emergencyType, userMessage);
 
         String response = webClient.post()
-            .uri("/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(payload)
-            .retrieve()
-            .bodyToMono(String.class)
-            .onErrorReturn("{\"error\":\"Gemini API 오류\"}")
-            .block();
-        log.info("response: {}", response);
-        Map<String, Object> result = new HashMap<>();
+                .uri("/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(payload)
+                .retrieve()
+                .bodyToMono(String.class)
+                .onErrorReturn("{\"error\":\"Gemini API 오류\"}")
+                .block();
+
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(response);
 
-            // Gemini API error check
             if (root.has("error")) {
                 log.error("Gemini API 응답 오류: {}", root.get("error"));
-                result.put("message", "Gemini API 호출 중 오류가 발생했습니다.");
-                result.put("data", null);
-                result.put("result", "FAIL");
-                return result;
+                throw new RuntimeException("Gemini API 호출 중 오류가 발생했습니다.");
             }
 
             String jsonString = root.at("/candidates/0/content/parts/0/text").asText().trim();
@@ -102,14 +82,11 @@ public class FirstAidService {
             if (jsonString.endsWith("```")) {
                 jsonString = jsonString.substring(0, jsonString.lastIndexOf("```")).trim();
             }
-            log.info(jsonString);
 
             JsonNode parsed = mapper.readTree(jsonString);
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("c", parsed.get("c").asText());
-            data.put("recommendedAction", parsed.get("recommendedAction").asText());
-            data.put("confidence", parsed.get("confidence").asDouble());
+            String content = parsed.get("c").asText();
+            String recommendedAction = parsed.get("recommendedAction").asText();
+            double confidence = parsed.get("confidence").asDouble();
 
             UUID sessionId = UUID.randomUUID();
             EmergencyChatSession session = new EmergencyChatSession();
@@ -117,8 +94,6 @@ public class FirstAidService {
             session.setEmergencyType(emergencyType);
             session.setCreatedAt(LocalDateTime.now());
             sessionRepository.save(session);
-
-            data.put("sessionId", sessionId.toString());
 
             EmergencyChatMessage userMsg = new EmergencyChatMessage();
             userMsg.setId(UUID.randomUUID());
@@ -131,57 +106,33 @@ public class FirstAidService {
             aiMsg.setId(UUID.randomUUID());
             aiMsg.setSession(session);
             aiMsg.setSender("ASSISTANT");
-            aiMsg.setMessage(parsed.get("c").asText());
+            aiMsg.setMessage(content);
             aiMsg.setCreatedAt(LocalDateTime.now());
 
             messageRepository.save(userMsg);
             messageRepository.save(aiMsg);
 
-            result.put("message", "요청이 성공적으로 처리되었습니다.");
-            result.put("data", data);
-            result.put("result", "SUCCESS");
+            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence);
         } catch (Exception e) {
-            result.put("message", "Gemini 응답 파싱 중 오류 발생");
-            log.error(e.getMessage(), e);
-            result.put("data", null);
-            result.put("result", "FAIL");
+            log.error("Gemini 응답 파싱 중 오류 발생", e);
+            throw new RuntimeException("Gemini 응답 파싱 중 오류 발생", e);
         }
-
-        return result;
     }
 
-    public List<Map<String, Object>> getChatMessagesBySessionId(UUID sessionId) {
+    public List<EmergencyChatMessageResponse> getChatMessagesBySessionId(UUID sessionId) {
         List<EmergencyChatMessage> messages = messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
-        List<Map<String, Object>> result = new ArrayList<>();
-
-        for (EmergencyChatMessage msg : messages) {
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("sender", msg.getSender());
-            entry.put("message", msg.getMessage());
-            entry.put("createdAt", msg.getCreatedAt());
-            result.add(entry);
-        }
-
-        return result;
+        return messages.stream()
+                .map(EmergencyChatMessageResponse::from)
+                .toList();
     }
 
-    public Map<String, Object> continueEmergencyChat(UUID sessionId, String userMessage) {
-        Map<String, Object> result = new HashMap<>();
-
+    public EmergencyChatAdviceResponse continueEmergencyChat(UUID sessionId, String userMessage) {
         if (userMessage == null || userMessage.trim().isEmpty()) {
-            result.put("message", "userMessage는 필수 입력값입니다.");
-            result.put("data", null);
-            result.put("result", "FAIL");
-            return result;
+            throw new IllegalArgumentException("userMessage는 필수 입력값입니다.");
         }
 
-        EmergencyChatSession session = sessionRepository.findById(sessionId).orElse(null);
-        if (session == null) {
-            result.put("message", "해당 세션을 찾을 수 없습니다.");
-            result.put("data", null);
-            result.put("result", "FAIL");
-            return result;
-        }
+        EmergencyChatSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 세션을 찾을 수 없습니다."));
 
         String prompt = "다음은 사용자가 동일한 응급상담 세션 중에 이어서 질문한 내용입니다.\n" +
                 "- 응급 상황 유형: " + session.getEmergencyType() + "\n" +
@@ -219,10 +170,7 @@ public class FirstAidService {
 
             if (root.has("error")) {
                 log.error("Gemini API 응답 오류: {}", root.get("error"));
-                result.put("message", "Gemini API 호출 중 오류가 발생했습니다.");
-                result.put("data", null);
-                result.put("result", "FAIL");
-                return result;
+                throw new RuntimeException("Gemini API 호출 중 오류가 발생했습니다.");
             }
 
             String jsonString = root.at("/candidates/0/content/parts/0/text").asText().trim();
@@ -234,11 +182,9 @@ public class FirstAidService {
             }
 
             JsonNode parsed = mapper.readTree(jsonString);
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("c", parsed.get("c").asText());
-            data.put("recommendedAction", parsed.get("recommendedAction").asText());
-            data.put("confidence", parsed.get("confidence").asDouble());
+            String content = parsed.get("c").asText();
+            String recommendedAction = parsed.get("recommendedAction").asText();
+            double confidence = parsed.get("confidence").asDouble();
 
             EmergencyChatMessage userMsg = new EmergencyChatMessage();
             userMsg.setId(UUID.randomUUID());
@@ -251,31 +197,44 @@ public class FirstAidService {
             aiMsg.setId(UUID.randomUUID());
             aiMsg.setSession(session);
             aiMsg.setSender("ASSISTANT");
-            aiMsg.setMessage(parsed.get("c").asText());
+            aiMsg.setMessage(content);
             aiMsg.setCreatedAt(LocalDateTime.now());
 
             messageRepository.save(userMsg);
             messageRepository.save(aiMsg);
 
-            result.put("message", "요청이 성공적으로 처리되었습니다.");
-            result.put("data", data);
-            result.put("result", "SUCCESS");
+            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence);
         } catch (Exception e) {
-            result.put("message", "Gemini 응답 파싱 중 오류 발생");
-            result.put("data", null);
-            result.put("result", "FAIL");
-            log.error(e.getMessage(), e);
+            log.error("Gemini 응답 파싱 중 오류 발생", e);
+            throw new RuntimeException("Gemini 응답 파싱 중 오류 발생", e);
         }
-
-        return result;
     }
 
     public EmergencyManual getManualByEmergencyType(EmergencyType emergencyType) {
         return manualRepository.findByEmergencyType(emergencyType)
-                .orElseThrow(() -> new IllegalArgumentException("해당 응급상황 유형의 매뉴얼이 존재하지 않습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 응급상황 유형의 매뉴얼이 존재하지 않습니다."));
     }
 
     public List<EmergencyManual> getAllManuals() {
         return manualRepository.findAll();
+    }
+
+    private Map<String, Object> makePromptForGemini(String emergencyType, String userMessage) {
+        String prompt = "다음 응급 상황에 대해 의학적인 조언을 제공해주세요.\n" +
+                "- 응급 상황 유형: " + emergencyType + "\n" +
+                "- 사용자 메시지: \"" + userMessage + "\"\n" +
+                "응답은 반드시 아래 JSON 형식으로 반환해주세요.\n" +
+                "{\n" +
+                "  \"c\": \"조언 텍스트\",\n" +
+                "  \"recommendedAction\": \"권장 행동\",\n" +
+                "  \"confidence\": 숫자 (0.0 ~ 1.0)\n" +
+                "}";
+
+        Map<String, Object> payload = Map.of(
+                "contents", List.of(
+                        Map.of("parts", List.of(Map.of("text", prompt)))
+                )
+        );
+        return payload;
     }
 }
