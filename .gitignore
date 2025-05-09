@@ -38,3 +38,16 @@ out/
 
 ### environment ###
 src/main/resources/.env
+
+# Terraform state
+*.tfstate
+*.tfstate.backup
+
+# Sensitive variable values
+terraform.tfvars
+
+# Terraform working directory
+.terraform/
+
+# GCP service account key (JSON)
+*.json
