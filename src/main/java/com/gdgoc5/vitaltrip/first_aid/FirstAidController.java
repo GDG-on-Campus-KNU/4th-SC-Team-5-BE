@@ -1,7 +1,7 @@
 package com.gdgoc5.vitaltrip.first_aid;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyManualResponse;
-import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyManual;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,15 +11,20 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import java.util.Map;
 import java.util.List;
 import java.util.UUID;
+import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatMessageResponse;
+import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatAdviceResponse;
+import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatAdviceRequest;
+import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatContinueRequest;
 
 @Slf4j
 @Tag(name = "First Aid", description = "응급처치 AI 상담 API")
@@ -62,7 +67,12 @@ public class FirstAidController {
         }
     )
     @PostMapping("/chat")
-    public Map<String, Object> getEmergencyAidAdvice(
+    @Retryable(
+            value = { JsonProcessingException.class, RuntimeException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
+    public EmergencyChatAdviceResponse getEmergencyAidAdvice(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "응급 상황 종류와 사용자 메시지를 담은 요청",
                     required = true,
@@ -80,10 +90,10 @@ public class FirstAidController {
                             )
                     )
             )
-            @RequestBody Map<String, String> request
+            @RequestBody EmergencyChatAdviceRequest request
     ) {
-        String emergencyType = request.get("emergencyType");
-        String userMessage = request.get("userMessage");
+        String emergencyType = request.emergencyType();
+        String userMessage = request.userMessage();
         return firstAidService.getEmergencyChatAdvice(emergencyType, userMessage);
     }
 
@@ -118,7 +128,7 @@ public class FirstAidController {
         }
     )
     @GetMapping("/chat/{sessionId}")
-    public List<Map<String, Object>> getChatMessages(@PathVariable UUID sessionId) {
+    public List<EmergencyChatMessageResponse> getChatMessages(@PathVariable UUID sessionId) {
         return firstAidService.getChatMessagesBySessionId(sessionId);
     }
 
@@ -150,7 +160,12 @@ public class FirstAidController {
         }
     )
     @PostMapping("/chat/{sessionId}")
-    public Map<String, Object> continueEmergencyChat(
+    @Retryable(
+            value = { JsonProcessingException.class, RuntimeException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
+    public EmergencyChatAdviceResponse continueEmergencyChat(
             @PathVariable UUID sessionId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "사용자의 추가 질문",
@@ -167,9 +182,9 @@ public class FirstAidController {
                             )
                     )
             )
-            @RequestBody Map<String, String> request
+            @RequestBody EmergencyChatContinueRequest request
     ) {
-        String userMessage = request.get("userMessage");
+        String userMessage = request.userMessage();
         return firstAidService.continueEmergencyChat(sessionId, userMessage);
     }
 
