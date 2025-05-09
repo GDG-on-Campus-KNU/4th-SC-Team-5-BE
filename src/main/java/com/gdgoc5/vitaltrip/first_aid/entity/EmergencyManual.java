@@ -1,29 +1,44 @@
 package com.gdgoc5.vitaltrip.first_aid.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Getter
 public class EmergencyManual {
+
     @Id
     private UUID id;
 
-    private String emergencyType;
+    @Column(nullable = false, unique = true)
+    @Enumerated(EnumType.STRING)
+    private EmergencyType emergencyType;
 
+    @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String description;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String steps;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String warning;
 
     private LocalDateTime updatedAt;
-}
 
+    @PrePersist
+    public void prePersist() {
+        this.id = UUID.randomUUID();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}

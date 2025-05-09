@@ -20,3 +20,13 @@ Content-Type: application/json
 {
   "userMessage": "물집이 터졌는데 어떻게 해야 하나요?"
 }
+
+
+### 응급처치 매뉴얼 단건 조회 (예: 화상)
+GET http://localhost:8080/first-aid/manuals/CHOKING
+Accept: application/json
+
+
+### 응급처치 매뉴얼 전체 목록 조회
+GET http://localhost:8080/first-aid/manuals
+Accept: application/json

@@ -1,11 +1,16 @@
 package com.gdgoc5.vitaltrip.first_aid;
 
+import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyManualResponse;
+import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyManual;
+import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyType;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +21,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Tag(name = "First Aid", description = "응급처치 AI 상담 API")
 @RestController
 @RequestMapping("/first-aid")
@@ -166,4 +172,88 @@ public class FirstAidController {
         String userMessage = request.get("userMessage");
         return firstAidService.continueEmergencyChat(sessionId, userMessage);
     }
+
+    @Operation(
+            summary = "응급처치 매뉴얼 조회",
+            description = "응급상황 유형에 따른 매뉴얼 정보를 조회합니다.",
+            parameters = {
+                    @Parameter(
+                            name = "emergencyType",
+                            description = "응급처치 유형 (예: BURNS, CHOKING, FRACTURE 등)",
+                            example = "CHOKING"
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "응급처치 매뉴얼 반환",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    examples = @ExampleObject(
+                                            name = "매뉴얼 응답 예시",
+                                            value = """
+                                            {
+                                               "emergencyType": "CHOKING",
+                                               "title": "기도막힘 응급처치 매뉴얼",
+                                               "description": "기도가 막힌 사람을 구하기 위한 조치입니다.",
+                                               "steps": "1. 기침 유도\\n2. 하임리히법 시행 (복부 밀치기)\\n3. 의식 없으면 CPR 시행",
+                                               "warning": "등을 세게 두드리는 행위는 효과가 제한적일 수 있습니다.",
+                                               "updatedAt": "2025-05-09T13:02:54"
+                                             }
+                        """
+                                    )
+                            )
+                    )
+            }
+    )
+    @GetMapping("/manuals/{emergencyType}")
+    public EmergencyManualResponse getManualByType(@PathVariable EmergencyType emergencyType) {
+        return EmergencyManualResponse.from(firstAidService.getManualByEmergencyType(emergencyType));
+    }
+
+    @Operation(
+        summary = "전체 응급처치 매뉴얼 목록 조회",
+        description = "모든 응급상황 유형에 대한 응급처치 매뉴얼 정보를 리스트로 반환합니다.",
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "응급처치 매뉴얼 목록",
+                content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                        name = "매뉴얼 목록 예시",
+                        value = """
+                        [
+                          {
+                            "emergencyType": "BURNS",
+                            "title": "화상 응급처치 매뉴얼",
+                            "description": "화상이 발생했을 때의 기본 응급처치 절차입니다.",
+                            "steps": "1. 흐르는 시원한 물로 10분 이상 식히기\\n2. 깨끗한 거즈로 부위 감싸기\\n3. 연고 및 얼음 금지",
+                            "warning": "물집을 터뜨리거나 얼음을 직접 대지 마세요.",
+                            "updatedAt": "2025-05-09T13:00:00"
+                          },
+                          {
+                            "emergencyType": "CHOKING",
+                            "title": "기도막힘 응급처치 매뉴얼",
+                            "description": "기도가 막힌 사람을 구하기 위한 조치입니다.",
+                            "steps": "1. 기침 유도\\n2. 하임리히법 시행 (복부 밀치기)\\n3. 의식 없으면 CPR 시행",
+                            "warning": "등을 세게 두드리는 행위는 효과가 제한적일 수 있습니다.",
+                            "updatedAt": "2025-05-09T13:02:54"
+                          }
+                        ]
+                        """
+                    )
+                )
+            )
+        }
+    )
+    @GetMapping("/manuals")
+    public List<EmergencyManualResponse> getAllManuals() {
+        return firstAidService.getAllManuals()
+                .stream()
+                .map(EmergencyManualResponse::from)
+                .toList();
+    }
+
+
 }
