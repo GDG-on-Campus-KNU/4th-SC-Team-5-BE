@@ -3,8 +3,8 @@ POST http://localhost:8080/first-aid/chat
 Content-Type: application/json
 
 {
-  "emergencyType": "BURNS",
-  "userMessage": "화상 부위가 부어오르고 통증이 심해요. 병원 가야 하나요?"
+  "emergencyType": "HYPOTHERMIA",
+  "userMessage": "너무 추워서 손에 감각이 없어요"
 }
 
 
@@ -14,16 +14,16 @@ Accept: application/json
 
 
 ### 응급 상담 계속하기
-POST http://localhost:8080/first-aid/chat/ab2fb108-03a5-4d1d-a01d-0141362394cd
+POST http://localhost:8080/first-aid/chat/61bf5897-dcfa-4466-a6d4-dae0a6188834
 Content-Type: application/json
 
 {
-  "userMessage": "물집이 터졌는데 어떻게 해야 하나요?"
+  "userMessage": "주변에 어떤 병원을 가야할까요?"
 }
 
 
 ### 응급처치 매뉴얼 단건 조회 (예: 화상)
-GET http://localhost:8080/first-aid/manuals/CHOKING
+GET http://localhost:8080/first-aid/manuals/BURNS
 Accept: application/json
 
 

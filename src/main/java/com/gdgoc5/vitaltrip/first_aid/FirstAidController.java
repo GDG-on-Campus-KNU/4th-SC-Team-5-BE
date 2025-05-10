@@ -1,6 +1,7 @@
 package com.gdgoc5.vitaltrip.first_aid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.gdgoc5.vitaltrip.custom.SuccessResponse;
 import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyManualResponse;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,15 +52,14 @@ public class FirstAidController {
                         name = "응급처치 초기 응답 예시",
                         value = """
                         {
-                           "result": "SUCCESS",
-                           "data": {
-                             "recommendedAction": "가능한 한 빨리 병원 또는 화상 전문 병원을 방문하여 진료를 받으십시오. 냉찜질로 통증을 완화하고, 깨끗한 거즈로 화상 부위를 덮어 보호하면서 병원으로 이동하십시오. 물집이 생겼다면 터뜨리지 마십시오.",
-                             "c": "화상 부위가 붓고 통증이 심하다면 2도 화상 이상일 가능성이 있습니다. 2도 화상은 물집이 생기거나 피부가 벗겨질 수 있으며, 통증이 심합니다. 감염의 위험도 있으므로 병원 방문이 필요할 수 있습니다. 특히 화상 부위가 넓거나, 얼굴/손/발/생식기 부위에 화상을 입은 경우, 또는 화상으로 인해 호흡 곤란, 쇼크 등의 증상이 나타나는 경우에는 즉시 응급실로 가셔야 합니다.",
-                             "confidence": 0.95,
-                             "sessionId": "38031983-062a-4853-be5b-87c15735b9df"
-                           },
-                           "message": "요청이 성공적으로 처리되었습니다."
-                         }
+                          "result": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "content": "저체온증은 생명을 위협하는 응급 상황입니다. 손에 감각이 없는 것은 저체온증의 초기 징후일 수 있습니다. 즉시 조치를 취해야 합니다. 핵심은 체온을 올리는 것입니다. 하지만 급격하게 체온을 올리는 것은 위험할 수 있으므로 천천히 진행해야 합니다.",
+                            "recommendedAction": "1. 즉시 따뜻한 곳으로 이동하세요. 실내로 들어가거나, 바람을 막을 수 있는 곳으로 가세요.\\n2. 젖은 옷을 모두 벗고 마른 옷으로 갈아입으세요. 가능하다면 여러 겹의 옷을 입으세요. 모자, 장갑, 목도리를 착용하여 열 손실을 막으세요.\\n3. 따뜻한 담요 (가능하면) 덮으세요.\\n4. 따뜻한 음료 (설탕이 든 차 또는 스포츠 음료)를 마셔 몸에 열을 공급하고 혈당 수치를 높이세요. 술이나 카페인이 든 음료는 피하세요.\\n5. 피부 대 피부 접촉을 통해 몸을 따뜻하게 하세요. 다른 사람이 마른 옷을 입고 당신을 껴안으면 도움이 될 수 있습니다.\\n6. 움직이세요. 가볍게 팔다리를 움직여 혈액 순환을 촉진하세요.\\n7. 만약 증상이 호전되지 않거나 악화된다면 (예: 심한 떨림, 혼란, 졸음, 발음 불명확 등), 즉시 119에 전화하여 의료 지원을 요청하세요. 의식이 없는 사람에게는 음료를 주지 마세요.",
+                            "confidence": 0.95
+                          }
+                        }
                         """
                     )
                 )
@@ -72,7 +72,7 @@ public class FirstAidController {
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
-    public EmergencyChatAdviceResponse getEmergencyAidAdvice(
+    public SuccessResponse<EmergencyChatAdviceResponse> getEmergencyAidAdvice(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "응급 상황 종류와 사용자 메시지를 담은 요청",
                     required = true,
@@ -82,8 +82,8 @@ public class FirstAidController {
                                     name = "초기 상담 요청 예시",
                                     value = """
                                     {
-                                      "emergencyType": "BURNS",
-                                      "userMessage": "화상 부위가 부어오르고 통증이 심해요. 병원 가야 하나요?"
+                                      "emergencyType": "HYPOTHERMIA",
+                                      "userMessage": "너무 추워서 손에 감각이 없어요"
                                     }
                                             
                                     """
@@ -94,7 +94,7 @@ public class FirstAidController {
     ) {
         String emergencyType = request.emergencyType();
         String userMessage = request.userMessage();
-        return firstAidService.getEmergencyChatAdvice(emergencyType, userMessage);
+        return SuccessResponse.of(firstAidService.getEmergencyChatAdvice(emergencyType, userMessage));
     }
 
     @Operation(
@@ -109,18 +109,32 @@ public class FirstAidController {
                     examples = @ExampleObject(
                         name = "대화 목록 예시",
                         value = """
-                        [
-                            {
-                              "createdAt": "2025-05-09T15:14:15.377152",
-                              "sender": "USER",
-                              "message": "화상 부위가 부어오르고 통증이 심해요. 병원 가야 하나요?"
-                            },
-                            {
-                              "createdAt": "2025-05-09T15:14:15.377202",
-                              "sender": "ASSISTANT",
-                              "message": "화상 부위가 부어오르고 통증이 심하다면 2도 이상의 화상일 가능성이 있습니다. 2도 화상은 물집이 생기거나 피부가 벗겨질 수 있으며 심한 통증을 동반합니다. 넓은 부위에 화상을 입었거나, 얼굴/손/발/생식기 부위에 화상을 입었을 경우, 또는 호흡 곤란이나 다른 증상이 동반된다면 즉시 병원에 가야 합니다. 집에서 응급처치를 할 수 있는 범위가 아닙니다. "
-                            }
-                          ]
+                        {
+                             "result": "SUCCESS",
+                             "message": "요청이 성공적으로 처리되었습니다.",
+                             "data": [
+                               {
+                                 "sender": "USER",
+                                 "message": "화상 부위가 부어오르고 통증이 심해요. 병원 가야 하나요?",
+                                 "createdAt": "2025-05-09T22:19:27.114084"
+                               },
+                               {
+                                 "sender": "ASSISTANT",
+                                 "message": "화상 부위가 붓고 통증이 심하다면 병원 방문을 고려해야 합니다. 증상이 심한 경우 2도 화상 이상일 가능성이 있으며, 감염 위험도 있습니다. 지금 당장 흐르는 찬물에 화상 부위를 10-20분 정도 식히세요. 물집이 생겼다면 터뜨리지 마시고, 깨끗한 거즈나 천으로 덮어 보호하세요. 통증이 심하다면 진통제를 복용할 수 있지만, 의사 또는 약사와 상담 후 복용하는 것이 좋습니다.",
+                                 "createdAt": "2025-05-09T22:19:27.114143"
+                               },
+                               {
+                                 "sender": "USER",
+                                 "message": "물집이 터졌는데 어떻게 해야 하나요?",
+                                 "createdAt": "2025-05-09T22:20:47.299083"
+                               },
+                               {
+                                 "sender": "ASSISTANT",
+                                 "message": "물집이 터졌을 경우 감염을 예방하는 것이 중요합니다. 깨끗한 물과 순한 비누로 조심스럽게 해당 부위를 씻으세요. 절대 문지르지 마세요. 깨끗한 천이나 거즈로 물기를 닦아내고, 항생 연고를 얇게 바르세요. 그 후 멸균 거즈나 반창고로 덮어 보호하세요. 매일 소독하고 새 드레싱으로 교체해야 합니다. 감염 징후(붉어짐, 부어오름, 통증 증가, 고름)가 나타나면 즉시 병원에 방문하세요.",
+                                 "createdAt": "2025-05-09T22:20:47.29913"
+                               }
+                             ]
+                           }
                         """
                     )
                 )
@@ -128,8 +142,8 @@ public class FirstAidController {
         }
     )
     @GetMapping("/chat/{sessionId}")
-    public List<EmergencyChatMessageResponse> getChatMessages(@PathVariable UUID sessionId) {
-        return firstAidService.getChatMessagesBySessionId(sessionId);
+    public SuccessResponse<List<EmergencyChatMessageResponse>> getChatMessages(@PathVariable UUID sessionId) {
+        return SuccessResponse.of(firstAidService.getChatMessagesBySessionId(sessionId));
     }
 
     @Operation(
@@ -165,7 +179,7 @@ public class FirstAidController {
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
-    public EmergencyChatAdviceResponse continueEmergencyChat(
+    public SuccessResponse<EmergencyChatAdviceResponse> continueEmergencyChat(
             @PathVariable UUID sessionId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "사용자의 추가 질문",
@@ -185,7 +199,7 @@ public class FirstAidController {
             @RequestBody EmergencyChatContinueRequest request
     ) {
         String userMessage = request.userMessage();
-        return firstAidService.continueEmergencyChat(sessionId, userMessage);
+        return SuccessResponse.of(firstAidService.continueEmergencyChat(sessionId, userMessage));
     }
 
     @Operation(
@@ -208,13 +222,27 @@ public class FirstAidController {
                                             name = "매뉴얼 응답 예시",
                                             value = """
                                             {
-                                               "emergencyType": "CHOKING",
-                                               "title": "기도막힘 응급처치 매뉴얼",
-                                               "description": "기도가 막힌 사람을 구하기 위한 조치입니다.",
-                                               "steps": "1. 기침 유도\\n2. 하임리히법 시행 (복부 밀치기)\\n3. 의식 없으면 CPR 시행",
-                                               "warning": "등을 세게 두드리는 행위는 효과가 제한적일 수 있습니다.",
-                                               "updatedAt": "2025-05-09T13:02:54"
-                                             }
+                                              "result": "SUCCESS",
+                                              "message": "요청이 성공적으로 처리되었습니다.",
+                                              "data": [
+                                                {
+                                                  "emergencyType": "BURNS",
+                                                  "title": "뜨거운 물에 의한 화상",
+                                                  "description": "뜨거운 물에 데였을 때 기본 응급처치입니다.",
+                                                  "steps": "1. 흐르는 찬물로 10~15분간 화상 부위를 식히세요.\\n2. 깨끗한 거즈로 덮으세요.\\n3. 통증이 심하면 병원 방문을 고려하세요.",
+                                                  "warning": "얼음을 직접 대거나 피부를 문지르지 마세요.",
+                                                  "updatedAt": "2025-05-10T04:13:05"
+                                                },
+                                                {
+                                                  "emergencyType": "BURNS",
+                                                  "title": "화학 물질에 의한 화상",
+                                                  "description": "화학 약품에 노출되었을 때 응급처치 방법입니다.",
+                                                  "steps": "1. 오염 부위를 즉시 흐르는 물로 20분 이상 세척하세요.\\n2. 오염된 옷을 제거하세요.\\n3. 통증이 계속되거나 눈에 노출된 경우 즉시 병원에 가세요.",
+                                                  "warning": "세척 중 눈을 비비지 마세요.",
+                                                  "updatedAt": "2025-05-10T04:13:05"
+                                                }
+                                              ]
+                                            }
                         """
                                     )
                             )
@@ -222,8 +250,9 @@ public class FirstAidController {
             }
     )
     @GetMapping("/manuals/{emergencyType}")
-    public EmergencyManualResponse getManualByType(@PathVariable EmergencyType emergencyType) {
-        return EmergencyManualResponse.from(firstAidService.getManualByEmergencyType(emergencyType));
+    public SuccessResponse<List<EmergencyManualResponse>> getManualByType(@PathVariable EmergencyType emergencyType) {
+        return SuccessResponse.of(firstAidService.getManualByEmergencyType(emergencyType)
+                .stream().map(EmergencyManualResponse::from).toList());
     }
 
     @Operation(
@@ -238,24 +267,28 @@ public class FirstAidController {
                     examples = @ExampleObject(
                         name = "매뉴얼 목록 예시",
                         value = """
-                        [
-                          {
-                            "emergencyType": "BURNS",
-                            "title": "화상 응급처치 매뉴얼",
-                            "description": "화상이 발생했을 때의 기본 응급처치 절차입니다.",
-                            "steps": "1. 흐르는 시원한 물로 10분 이상 식히기\\n2. 깨끗한 거즈로 부위 감싸기\\n3. 연고 및 얼음 금지",
-                            "warning": "물집을 터뜨리거나 얼음을 직접 대지 마세요.",
-                            "updatedAt": "2025-05-09T13:00:00"
-                          },
-                          {
-                            "emergencyType": "CHOKING",
-                            "title": "기도막힘 응급처치 매뉴얼",
-                            "description": "기도가 막힌 사람을 구하기 위한 조치입니다.",
-                            "steps": "1. 기침 유도\\n2. 하임리히법 시행 (복부 밀치기)\\n3. 의식 없으면 CPR 시행",
-                            "warning": "등을 세게 두드리는 행위는 효과가 제한적일 수 있습니다.",
-                            "updatedAt": "2025-05-09T13:02:54"
-                          }
-                        ]
+                        {
+                           "result": "SUCCESS",
+                           "message": "요청이 성공적으로 처리되었습니다.",
+                           "data": [
+                             {
+                               "emergencyType": "BURNS",
+                               "title": "전기에 의한 화상",
+                               "description": "전기 사고로 인한 화상 시 대응 방법입니다.",
+                               "steps": "1. 전원 차단 후 접근하세요.\\n2. 심정지 가능성 대비 CPR을 준비하세요.\\n3. 화상 부위는 흐르는 물로 식히지 말고 병원 이송을 우선하세요.",
+                               "warning": "전기가 흐르는 상태에서는 환자에게 접촉하지 마세요.",
+                               "updatedAt": "2025-05-10T04:13:05"
+                             },
+                             {
+                               "emergencyType": "FRACTURE",
+                               "title": "팔 골절",
+                               "description": "팔이 부러진 경우의 응급처치 방법입니다.",
+                               "steps": "1. 부목이나 단단한 물체로 팔을 고정하세요.\\n2. 움직이지 않게 하고 병원으로 이송하세요.",
+                               "warning": "뼈를 억지로 맞추려 하지 마세요.",
+                               "updatedAt": "2025-05-10T04:13:05"
+                             }
+                           ]
+                         }
                         """
                     )
                 )
@@ -263,11 +296,11 @@ public class FirstAidController {
         }
     )
     @GetMapping("/manuals")
-    public List<EmergencyManualResponse> getAllManuals() {
-        return firstAidService.getAllManuals()
+    public SuccessResponse<List<EmergencyManualResponse>> getAllManuals() {
+        return SuccessResponse.of(firstAidService.getAllManuals()
                 .stream()
                 .map(EmergencyManualResponse::from)
-                .toList();
+                .toList());
     }
 
 
