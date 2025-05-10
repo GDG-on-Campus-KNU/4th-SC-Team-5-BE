@@ -4,16 +4,16 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Getter
 public class EmergencyManual {
 
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private EmergencyType emergencyType;
 
@@ -33,7 +33,6 @@ public class EmergencyManual {
 
     @PrePersist
     public void prePersist() {
-        this.id = UUID.randomUUID();
         this.updatedAt = LocalDateTime.now();
     }
 

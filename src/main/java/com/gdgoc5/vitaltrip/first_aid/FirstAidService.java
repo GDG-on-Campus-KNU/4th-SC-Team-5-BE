@@ -2,7 +2,6 @@ package com.gdgoc5.vitaltrip.first_aid;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gdgoc5.vitaltrip.exception.NotFoundException;
 import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatAdviceResponse;
 import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatMessageResponse;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyChatMessage;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -210,9 +208,8 @@ public class FirstAidService {
         }
     }
 
-    public EmergencyManual getManualByEmergencyType(EmergencyType emergencyType) {
-        return manualRepository.findByEmergencyType(emergencyType)
-                .orElseThrow(() -> new NotFoundException("해당 응급상황 유형의 매뉴얼이 존재하지 않습니다."));
+    public List<EmergencyManual> getManualByEmergencyType(EmergencyType emergencyType) {
+        return manualRepository.findByEmergencyType(emergencyType);
     }
 
     public List<EmergencyManual> getAllManuals() {
