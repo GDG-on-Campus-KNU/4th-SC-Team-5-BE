@@ -88,10 +88,11 @@ flush privileges;
 
 ```bash
 DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT}
 DB_USERNAME=${CUSTOM_USER}
 DB_DATABASE=vitaltrip_database
 DB_PASSWORD=${CUSTOM_PASSWORD}
-GEMINI_API_KEY==${GEMINI_API_KEY}
+GEMINI_API_KEY=${GEMINI_API_KEY}
 ```
 
 2. 컨테이너 실행
@@ -125,9 +126,11 @@ terraform apply
 5. root 디렉토리에 .env 파일 생성 후 아래 내용 넣기
 ```bash
 DB_HOST=mysql-container
+DB_PORT=${DB_PORT}
 DB_USERNAME=${CUSTOM_USER}
 DB_DATABASE=vitaltrip_database
 DB_PASSWORD=${CUSTOM_PASSWORD}
+GEMINI_API_KEY=${GEMINI_API_KEY}
 ```
 
 > ✅ 이 .env 파일이 있어야 vitaltrip 도커 컨테이너가 정상 실행됩니다. 혹시 도커 컨테이너가 자동실행 된 이후에 .env를 추가했다면 해당 도커 컨테이너를 재실행해주면 정상작동합니다. 
