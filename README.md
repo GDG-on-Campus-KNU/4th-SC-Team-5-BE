@@ -87,7 +87,7 @@ flush privileges;
 1. 루트 디렉토리에 .env 파일 두기
 
 ```bash
-DB_HOST=mysql-container
+DB_HOST=${DB_HOST}
 DB_USERNAME=${CUSTOM_USER}
 DB_DATABASE=vitaltrip_database
 DB_PASSWORD=${CUSTOM_PASSWORD}
