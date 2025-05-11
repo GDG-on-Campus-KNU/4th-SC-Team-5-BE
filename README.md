@@ -91,6 +91,7 @@ DB_HOST=mysql-container
 DB_USERNAME=${CUSTOM_USER}
 DB_DATABASE=vitaltrip_database
 DB_PASSWORD=${CUSTOM_PASSWORD}
+GEMINI_API_KEY==${GEMINI_API_KEY}
 ```
 
 2. 컨테이너 실행
