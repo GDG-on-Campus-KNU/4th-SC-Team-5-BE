@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
-import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -48,73 +47,38 @@ public class FirstAidService {
             throw new IllegalArgumentException("userMessage는 필수 입력값입니다.");
         }
 
-        WebClient webClient = WebClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com")
-                .defaultHeader("Content-Type", "application/json")
-                .build();
+        Map<String, Object> payload = makeEmergencyPrompt(emergencyType, userMessage, false);
+        EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload);
 
-        Map<String, Object> payload = makePromptForGemini(emergencyType, userMessage);
+        UUID sessionId = UUID.randomUUID();
+        EmergencyChatSession session = new EmergencyChatSession();
+        session.setId(sessionId);
+        session.setEmergencyType(emergencyType);
+        session.setCreatedAt(LocalDateTime.now());
+        sessionRepository.save(session);
 
-        String response = webClient.post()
-                .uri("/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(payload)
-                .retrieve()
-                .bodyToMono(String.class)
-                .onErrorReturn("{\"error\":\"Gemini API 오류\"}")
-                .block();
+        return getEmergencyChatAdviceResponse(userMessage, advice, session);
+    }
 
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response);
+    private EmergencyChatAdviceResponse getEmergencyChatAdviceResponse(String userMessage, EmergencyChatAdviceResponse advice, EmergencyChatSession session) {
+        EmergencyChatMessage userMsg = new EmergencyChatMessage();
+        userMsg.setId(UUID.randomUUID());
+        userMsg.setSession(session);
+        userMsg.setSender("USER");
+        userMsg.setMessage(userMessage);
+        userMsg.setCreatedAt(LocalDateTime.now());
 
-            if (root.has("error")) {
-                log.error("Gemini API 응답 오류: {}", root.get("error"));
-                throw new RuntimeException("Gemini API 호출 중 오류가 발생했습니다.");
-            }
+        EmergencyChatMessage aiMsg = new EmergencyChatMessage();
+        aiMsg.setId(UUID.randomUUID());
+        aiMsg.setSession(session);
+        aiMsg.setSender("ASSISTANT");
+        aiMsg.setMessage(advice.content());
+        aiMsg.setCreatedAt(LocalDateTime.now());
 
-            String jsonString = root.at("/candidates/0/content/parts/0/text").asText().trim();
-            if (jsonString.startsWith("```json")) {
-                jsonString = jsonString.replaceFirst("```json", "").trim();
-            }
-            if (jsonString.endsWith("```")) {
-                jsonString = jsonString.substring(0, jsonString.lastIndexOf("```")).trim();
-            }
+        messageRepository.save(userMsg);
+        messageRepository.save(aiMsg);
 
-            JsonNode parsed = mapper.readTree(jsonString);
-            String content = parsed.get("c").asText();
-            String recommendedAction = parsed.get("recommendedAction").asText();
-            double confidence = parsed.get("confidence").asDouble();
-
-            UUID sessionId = UUID.randomUUID();
-            EmergencyChatSession session = new EmergencyChatSession();
-            session.setId(sessionId);
-            session.setEmergencyType(emergencyType);
-            session.setCreatedAt(LocalDateTime.now());
-            sessionRepository.save(session);
-
-            EmergencyChatMessage userMsg = new EmergencyChatMessage();
-            userMsg.setId(UUID.randomUUID());
-            userMsg.setSession(session);
-            userMsg.setSender("USER");
-            userMsg.setMessage(userMessage);
-            userMsg.setCreatedAt(LocalDateTime.now());
-
-            EmergencyChatMessage aiMsg = new EmergencyChatMessage();
-            aiMsg.setId(UUID.randomUUID());
-            aiMsg.setSession(session);
-            aiMsg.setSender("ASSISTANT");
-            aiMsg.setMessage(content);
-            aiMsg.setCreatedAt(LocalDateTime.now());
-
-            messageRepository.save(userMsg);
-            messageRepository.save(aiMsg);
-
-            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence);
-        } catch (Exception e) {
-            log.error("Gemini 응답 파싱 중 오류 발생", e);
-            throw new RuntimeException("Gemini 응답 파싱 중 오류 발생", e);
-        }
+        return advice;
     }
 
     public List<EmergencyChatMessageResponse> getChatMessagesBySessionId(UUID sessionId) {
@@ -132,26 +96,48 @@ public class FirstAidService {
         EmergencyChatSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 세션을 찾을 수 없습니다."));
 
-        String prompt = "다음은 사용자가 동일한 응급상담 세션 중에 이어서 질문한 내용입니다.\n" +
-                "- 응급 상황 유형: " + session.getEmergencyType() + "\n" +
-                "- 사용자 메시지: \"" + userMessage + "\"\n" +
-                "이 메시지를 기반으로 적절한 응급처치 조언을 제공해주세요. 응답은 반드시 아래 JSON 형식으로 반환해야 합니다.\n" +
+        Map<String, Object> payload = makeEmergencyPrompt(session.getEmergencyType(), userMessage, true);
+        EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload);
+
+        return getEmergencyChatAdviceResponse(userMessage, advice, session);
+    }
+
+    public List<EmergencyManual> getManualByEmergencyType(EmergencyType emergencyType) {
+        return manualRepository.findByEmergencyType(emergencyType);
+    }
+
+    public List<EmergencyManual> getAllManuals() {
+        return manualRepository.findAll();
+    }
+
+    private Map<String, Object> makeEmergencyPrompt(String emergencyType, String userMessage, boolean isFollowUp) {
+        String intro = isFollowUp
+                ? "The following is a follow-up message from the user during the ongoing emergency consultation session."
+                : "Please provide first aid advice for the following emergency situation.";
+
+        String prompt = intro + "\n" +
+                "- Emergency Type: " + emergencyType + "\n" +
+                "- User Message: \"" + userMessage + "\"\n" +
+                "Based on this information, please provide appropriate first aid advice, and suggest a phrase that the user can say directly to local medical personnel (written from the user's perspective, using first-person pronouns like 'I', 'my'). The response must strictly follow the JSON format below:\n" +
                 "{\n" +
-                "  \"c\": \"조언 텍스트\",\n" +
-                "  \"recommendedAction\": \"권장 행동\",\n" +
-                "  \"confidence\": 숫자 (0.0 ~ 1.0)\n" +
+                "  \"c\": \"Advice text\",\n" +
+                "  \"recommendedAction\": \"Recommended action\",\n" +
+                "  \"confidence\": number (0.0 ~ 1.0),\n" +
+                "  \"suggestedPhrase\": \"Phrase the user can say to local medical personnel (written in first-person)\"\n" +
                 "}";
 
-        WebClient webClient = WebClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com")
-                .defaultHeader("Content-Type", "application/json")
-                .build();
-
-        Map<String, Object> payload = Map.of(
+        return Map.of(
                 "contents", List.of(
                         Map.of("parts", List.of(Map.of("text", prompt)))
                 )
         );
+    }
+
+    private EmergencyChatAdviceResponse callGeminiAndParseResponse(Map<String, Object> payload) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://generativelanguage.googleapis.com")
+                .defaultHeader("Content-Type", "application/json")
+                .build();
 
         String response = webClient.post()
                 .uri("/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey)
@@ -172,6 +158,7 @@ public class FirstAidService {
             }
 
             String jsonString = root.at("/candidates/0/content/parts/0/text").asText().trim();
+            log.info("jsonString: {}", jsonString);
             if (jsonString.startsWith("```json")) {
                 jsonString = jsonString.replaceFirst("```json", "").trim();
             }
@@ -183,55 +170,12 @@ public class FirstAidService {
             String content = parsed.get("c").asText();
             String recommendedAction = parsed.get("recommendedAction").asText();
             double confidence = parsed.get("confidence").asDouble();
+            String suggestedPhrase = parsed.get("suggestedPhrase").asText();
 
-            EmergencyChatMessage userMsg = new EmergencyChatMessage();
-            userMsg.setId(UUID.randomUUID());
-            userMsg.setSession(session);
-            userMsg.setSender("USER");
-            userMsg.setMessage(userMessage);
-            userMsg.setCreatedAt(LocalDateTime.now());
-
-            EmergencyChatMessage aiMsg = new EmergencyChatMessage();
-            aiMsg.setId(UUID.randomUUID());
-            aiMsg.setSession(session);
-            aiMsg.setSender("ASSISTANT");
-            aiMsg.setMessage(content);
-            aiMsg.setCreatedAt(LocalDateTime.now());
-
-            messageRepository.save(userMsg);
-            messageRepository.save(aiMsg);
-
-            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence);
+            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence, suggestedPhrase);
         } catch (Exception e) {
             log.error("Gemini 응답 파싱 중 오류 발생", e);
             throw new RuntimeException("Gemini 응답 파싱 중 오류 발생", e);
         }
-    }
-
-    public List<EmergencyManual> getManualByEmergencyType(EmergencyType emergencyType) {
-        return manualRepository.findByEmergencyType(emergencyType);
-    }
-
-    public List<EmergencyManual> getAllManuals() {
-        return manualRepository.findAll();
-    }
-
-    private Map<String, Object> makePromptForGemini(String emergencyType, String userMessage) {
-        String prompt = "다음 응급 상황에 대해 의학적인 조언을 제공해주세요.\n" +
-                "- 응급 상황 유형: " + emergencyType + "\n" +
-                "- 사용자 메시지: \"" + userMessage + "\"\n" +
-                "응답은 반드시 아래 JSON 형식으로 반환해주세요.\n" +
-                "{\n" +
-                "  \"c\": \"조언 텍스트\",\n" +
-                "  \"recommendedAction\": \"권장 행동\",\n" +
-                "  \"confidence\": 숫자 (0.0 ~ 1.0)\n" +
-                "}";
-
-        Map<String, Object> payload = Map.of(
-                "contents", List.of(
-                        Map.of("parts", List.of(Map.of("text", prompt)))
-                )
-        );
-        return payload;
     }
 }
