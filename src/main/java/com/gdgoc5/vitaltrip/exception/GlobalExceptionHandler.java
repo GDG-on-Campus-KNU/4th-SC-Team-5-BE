@@ -1,11 +1,13 @@
 package com.gdgoc5.vitaltrip.exception;
 
 import com.gdgoc5.vitaltrip.custom.ErrorResponse;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+@Hidden
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
