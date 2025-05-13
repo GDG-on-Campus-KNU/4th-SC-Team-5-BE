@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
+import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -57,28 +58,11 @@ public class FirstAidService {
         session.setCreatedAt(LocalDateTime.now());
         sessionRepository.save(session);
 
-        return getEmergencyChatAdviceResponse(userMessage, advice, session);
-    }
+        saveEmergencyChatMessages(userMessage, advice, session);
 
-    private EmergencyChatAdviceResponse getEmergencyChatAdviceResponse(String userMessage, EmergencyChatAdviceResponse advice, EmergencyChatSession session) {
-        EmergencyChatMessage userMsg = new EmergencyChatMessage();
-        userMsg.setId(UUID.randomUUID());
-        userMsg.setSession(session);
-        userMsg.setSender("USER");
-        userMsg.setMessage(userMessage);
-        userMsg.setCreatedAt(LocalDateTime.now());
-
-        EmergencyChatMessage aiMsg = new EmergencyChatMessage();
-        aiMsg.setId(UUID.randomUUID());
-        aiMsg.setSession(session);
-        aiMsg.setSender("ASSISTANT");
-        aiMsg.setMessage(advice.content());
-        aiMsg.setCreatedAt(LocalDateTime.now());
-
-        messageRepository.save(userMsg);
-        messageRepository.save(aiMsg);
-
-        return advice;
+        // TODO: sessionId를 추가하려고 기존 EmergencyChatAdviceResponse를 새로 생성하는 방식은 비효율적임
+        //  초기 상담용 전용 DTO를 별도로 만들어서 sessionId를 포함하는 구조로 개선할 것
+        return advice.withSessionId(sessionId);
     }
 
     public List<EmergencyChatMessageResponse> getChatMessagesBySessionId(UUID sessionId) {
@@ -99,7 +83,8 @@ public class FirstAidService {
         Map<String, Object> payload = makeEmergencyPrompt(session.getEmergencyType(), userMessage, true);
         EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload);
 
-        return getEmergencyChatAdviceResponse(userMessage, advice, session);
+        saveEmergencyChatMessages(userMessage, advice, session);
+        return advice;
     }
 
     public List<EmergencyManual> getManualByEmergencyType(EmergencyType emergencyType) {
@@ -110,6 +95,26 @@ public class FirstAidService {
         return manualRepository.findAll();
     }
 
+    private void saveEmergencyChatMessages(String userMessage, EmergencyChatAdviceResponse advice, EmergencyChatSession session) {
+        EmergencyChatMessage userMsg = new EmergencyChatMessage();
+        userMsg.setId(UUID.randomUUID());
+        userMsg.setSession(session);
+        userMsg.setSender("USER");
+        userMsg.setMessage(userMessage);
+        userMsg.setCreatedAt(LocalDateTime.now());
+
+        EmergencyChatMessage aiMsg = new EmergencyChatMessage();
+        aiMsg.setId(UUID.randomUUID());
+        aiMsg.setSession(session);
+        aiMsg.setSender("ASSISTANT");
+        aiMsg.setMessage(advice.content());
+        aiMsg.setCreatedAt(LocalDateTime.now());
+
+        messageRepository.save(userMsg);
+        messageRepository.save(aiMsg);
+    }
+
+
     private Map<String, Object> makeEmergencyPrompt(String emergencyType, String userMessage, boolean isFollowUp) {
         String intro = isFollowUp
                 ? "The following is a follow-up message from the user during the ongoing emergency consultation session."
@@ -118,17 +123,23 @@ public class FirstAidService {
         String prompt = intro + "\n" +
                 "- Emergency Type: " + emergencyType + "\n" +
                 "- User Message: \"" + userMessage + "\"\n" +
-                "Based on this information, please provide appropriate first aid advice, and suggest a phrase that the user can say directly to local medical personnel (written from the user's perspective, using first-person pronouns like 'I', 'my'). The response must strictly follow the JSON format below:\n" +
+                "Based on this information, provide first aid advice without using markdown formatting like **bold**.\n" +
+                "Additionally, suggest two blog article links that explain self-care methods related to the symptoms.\n" +
+                "The response must strictly follow the JSON format below:\n" +
                 "{\n" +
                 "  \"c\": \"Advice text\",\n" +
                 "  \"recommendedAction\": \"Recommended action\",\n" +
                 "  \"confidence\": number (0.0 ~ 1.0),\n" +
-                "  \"suggestedPhrase\": \"Phrase the user can say to local medical personnel (written in first-person)\"\n" +
+                "  \"blogLinks\": [\"link1\", \"link2\"]\n" +
                 "}";
 
         return Map.of(
                 "contents", List.of(
-                        Map.of("parts", List.of(Map.of("text", prompt)))
+                        Map.of(
+                                "parts", List.of(
+                                        Map.of("text", prompt)
+                                )
+                        )
                 )
         );
     }
@@ -170,9 +181,11 @@ public class FirstAidService {
             String content = parsed.get("c").asText();
             String recommendedAction = parsed.get("recommendedAction").asText();
             double confidence = parsed.get("confidence").asDouble();
-            String suggestedPhrase = parsed.get("suggestedPhrase").asText();
 
-            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence, suggestedPhrase);
+            List<String> blogLinks = new ArrayList<>();
+            parsed.get("blogLinks").forEach(node -> blogLinks.add(node.asText()));
+
+            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence, blogLinks);
         } catch (Exception e) {
             log.error("Gemini 응답 파싱 중 오류 발생", e);
             throw new RuntimeException("Gemini 응답 파싱 중 오류 발생", e);

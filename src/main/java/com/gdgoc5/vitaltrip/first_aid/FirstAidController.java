@@ -82,9 +82,19 @@ public class FirstAidController {
                                     name = "초기 상담 요청 예시",
                                     value = """
                                     {
-                                      "emergencyType": "HYPOTHERMIA",
-                                      "userMessage": "It's so cold I can't feel my hands."
-                                    }
+                                        "result": "SUCCESS",
+                                        "message": "요청이 성공적으로 처리되었습니다.",
+                                        "data": {
+                                          "content": "Your core body temperature is likely dangerously low (hypothermia). This is a serious medical emergency. Seek immediate medical attention; call emergency services (911 or your local emergency number) or have someone drive you to the nearest hospital right away. While waiting for help: Move to a warm place, if possible. Remove any wet clothing. If you can't move to a warmer place, protect yourself from the elements. Cover your head, neck, and groin. Try to get into dry clothes. If dry clothes aren't available, wring out wet clothes as much as possible. Drink warm, sweet fluids (like sugary tea or juice) if you are alert and able to swallow. Avoid alcohol. Apply warm compresses to your neck, armpits, and groin. Do not apply direct heat to your extremities (like hands and feet) as this can cause further damage. Monitor breathing and level of consciousness. Be prepared to administer CPR if needed.",
+                                          "recommendedAction": "Call emergency services immediately.",
+                                          "confidence": 0.95,
+                                          "blogLinks": [
+                                            "https://www.rei.com/learn/expert-advice/hypothermia.html",
+                                            "https://www.mayoclinic.org/diseases-conditions/hypothermia/diagnosis-treatment/drc-20352687"
+                                          ],
+                                          "sessionId": "98bc616c-447f-40dc-81a7-34e42cb255fc"
+                                        }
+                                      }
                                     """
                             )
                     )
@@ -161,10 +171,14 @@ public class FirstAidController {
                           "result": "SUCCESS",
                           "message": "요청이 성공적으로 처리되었습니다.",
                           "data": {
-                            "content": "Since you are asking for the nearest hospital, your condition likely requires immediate medical attention. Continue any warming measures you are able to safely administer (remove wet clothing, add dry layers, seek shelter if not already there), but prioritize getting to a hospital. Use your phone to search for the closest emergency room (ER) or dial your local emergency number (like 911 in the US) for immediate transport. Don't delay transport to find the 'best' hospital; the closest one is the priority right now.",
-                            "recommendedAction": "Go to the nearest emergency room (ER) immediately. Call local emergency number if needed for transport.",
-                            "confidence": 1.0,
-                            "suggestedPhrase": "I think I have severe hypothermia. I'm feeling [mention specific symptoms like shivering, confusion, drowsiness]. I need help immediately."
+                            "content": "Since you believe you are experiencing hypothermia, it is vital to seek immediate medical attention. I cannot provide specific hospital recommendations without knowing your location. Please provide your current location (city, address, or nearby landmark) so I can identify the nearest hospital with emergency services. While waiting for transport, continue warming measures like removing any wet clothing and covering yourself with dry blankets or clothing. Avoid rubbing the affected areas, as this can cause tissue damage. If possible, drink something warm and sweet if you are conscious and able to swallow safely.",
+                            "recommendedAction": "Provide location for nearest hospital search and continue warming measures while awaiting transport.",
+                            "confidence": 0.95,
+                            "blogLinks": [
+                              "https://www.mayoclinic.org/first-aid/first-aid-hypothermia/basics/art-20056681",
+                              "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/winter-storm/hypothermia.html"
+                            ],
+                            "sessionId": null
                           }
                         }
                         """
