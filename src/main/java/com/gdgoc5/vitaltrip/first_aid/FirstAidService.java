@@ -58,28 +58,11 @@ public class FirstAidService {
         session.setCreatedAt(LocalDateTime.now());
         sessionRepository.save(session);
 
-        return getEmergencyChatAdviceResponse(userMessage, advice, session);
-    }
+        saveEmergencyChatMessages(userMessage, advice, session);
 
-    private EmergencyChatAdviceResponse getEmergencyChatAdviceResponse(String userMessage, EmergencyChatAdviceResponse advice, EmergencyChatSession session) {
-        EmergencyChatMessage userMsg = new EmergencyChatMessage();
-        userMsg.setId(UUID.randomUUID());
-        userMsg.setSession(session);
-        userMsg.setSender("USER");
-        userMsg.setMessage(userMessage);
-        userMsg.setCreatedAt(LocalDateTime.now());
-
-        EmergencyChatMessage aiMsg = new EmergencyChatMessage();
-        aiMsg.setId(UUID.randomUUID());
-        aiMsg.setSession(session);
-        aiMsg.setSender("ASSISTANT");
-        aiMsg.setMessage(advice.content());
-        aiMsg.setCreatedAt(LocalDateTime.now());
-
-        messageRepository.save(userMsg);
-        messageRepository.save(aiMsg);
-
-        return advice;
+        // TODO: sessionId를 추가하려고 기존 EmergencyChatAdviceResponse를 새로 생성하는 방식은 비효율적임
+        //  초기 상담용 전용 DTO를 별도로 만들어서 sessionId를 포함하는 구조로 개선할 것
+        return advice.withSessionId(sessionId);
     }
 
     public List<EmergencyChatMessageResponse> getChatMessagesBySessionId(UUID sessionId) {
@@ -100,7 +83,8 @@ public class FirstAidService {
         Map<String, Object> payload = makeEmergencyPrompt(session.getEmergencyType(), userMessage, true);
         EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload);
 
-        return getEmergencyChatAdviceResponse(userMessage, advice, session);
+        saveEmergencyChatMessages(userMessage, advice, session);
+        return advice;
     }
 
     public List<EmergencyManual> getManualByEmergencyType(EmergencyType emergencyType) {
@@ -110,6 +94,26 @@ public class FirstAidService {
     public List<EmergencyManual> getAllManuals() {
         return manualRepository.findAll();
     }
+
+    private void saveEmergencyChatMessages(String userMessage, EmergencyChatAdviceResponse advice, EmergencyChatSession session) {
+        EmergencyChatMessage userMsg = new EmergencyChatMessage();
+        userMsg.setId(UUID.randomUUID());
+        userMsg.setSession(session);
+        userMsg.setSender("USER");
+        userMsg.setMessage(userMessage);
+        userMsg.setCreatedAt(LocalDateTime.now());
+
+        EmergencyChatMessage aiMsg = new EmergencyChatMessage();
+        aiMsg.setId(UUID.randomUUID());
+        aiMsg.setSession(session);
+        aiMsg.setSender("ASSISTANT");
+        aiMsg.setMessage(advice.content());
+        aiMsg.setCreatedAt(LocalDateTime.now());
+
+        messageRepository.save(userMsg);
+        messageRepository.save(aiMsg);
+    }
+
 
     private Map<String, Object> makeEmergencyPrompt(String emergencyType, String userMessage, boolean isFollowUp) {
         String intro = isFollowUp

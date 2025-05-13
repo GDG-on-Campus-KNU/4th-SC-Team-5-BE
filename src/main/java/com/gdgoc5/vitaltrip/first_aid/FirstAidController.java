@@ -82,18 +82,19 @@ public class FirstAidController {
                                     name = "초기 상담 요청 예시",
                                     value = """
                                     {
-                                       "result": "SUCCESS",
-                                       "message": "요청이 성공적으로 처리되었습니다.",
-                                       "data": {
-                                         "content": "Your situation sounds serious. Because you can't feel your hands, this could be the start of hypothermia. First, get out of the cold immediately. Find a warm place indoors, if possible. Remove any wet clothing. If you can't get indoors, find shelter from the wind and rain. Gently warm your hands, avoiding direct heat like a fire or hot water bottle, as this can cause burns. Try to warm your core first by layering dry blankets or clothing. Drink warm, non-alcoholic, non-caffeinated beverages, like broth or herbal tea if available. Monitor yourself closely. If your condition worsens, you develop confusion, or you have trouble shivering, seek immediate medical attention by calling emergency services.",
-                                         "recommendedAction": "Seek immediate medical attention if symptoms worsen or confusion develops.",
-                                         "confidence": 0.95,
-                                         "blogLinks": [
-                                           "https://www.rei.com/learn/expert-advice/hypothermia.html",
-                                           "https://www.mayoclinic.org/first-aid/first-aid-hypothermia/basics/art-20056683"
-                                         ]
-                                       }
-                                     }
+                                        "result": "SUCCESS",
+                                        "message": "요청이 성공적으로 처리되었습니다.",
+                                        "data": {
+                                          "content": "Your core body temperature is likely dangerously low (hypothermia). This is a serious medical emergency. Seek immediate medical attention; call emergency services (911 or your local emergency number) or have someone drive you to the nearest hospital right away. While waiting for help: Move to a warm place, if possible. Remove any wet clothing. If you can't move to a warmer place, protect yourself from the elements. Cover your head, neck, and groin. Try to get into dry clothes. If dry clothes aren't available, wring out wet clothes as much as possible. Drink warm, sweet fluids (like sugary tea or juice) if you are alert and able to swallow. Avoid alcohol. Apply warm compresses to your neck, armpits, and groin. Do not apply direct heat to your extremities (like hands and feet) as this can cause further damage. Monitor breathing and level of consciousness. Be prepared to administer CPR if needed.",
+                                          "recommendedAction": "Call emergency services immediately.",
+                                          "confidence": 0.95,
+                                          "blogLinks": [
+                                            "https://www.rei.com/learn/expert-advice/hypothermia.html",
+                                            "https://www.mayoclinic.org/diseases-conditions/hypothermia/diagnosis-treatment/drc-20352687"
+                                          ],
+                                          "sessionId": "98bc616c-447f-40dc-81a7-34e42cb255fc"
+                                        }
+                                      }
                                     """
                             )
                     )
@@ -170,13 +171,14 @@ public class FirstAidController {
                           "result": "SUCCESS",
                           "message": "요청이 성공적으로 처리되었습니다.",
                           "data": {
-                            "content": "While I cannot provide specific medical facility recommendations due to safety and real-time information limitations, immediately call emergency services (like 911 or your local emergency number). They can dispatch an ambulance and direct you to the nearest appropriate hospital equipped to handle hypothermia. Continue providing first aid while waiting: gently move the person to a warmer location if possible, remove any wet clothing and replace it with dry layers, and cover them with blankets. If they are conscious, offer warm (not hot) sweet drinks. Avoid rubbing their limbs vigorously as this can cause further harm.",
-                            "recommendedAction": "Call emergency services immediately and provide first aid while waiting for help.",
+                            "content": "Since you believe you are experiencing hypothermia, it is vital to seek immediate medical attention. I cannot provide specific hospital recommendations without knowing your location. Please provide your current location (city, address, or nearby landmark) so I can identify the nearest hospital with emergency services. While waiting for transport, continue warming measures like removing any wet clothing and covering yourself with dry blankets or clothing. Avoid rubbing the affected areas, as this can cause tissue damage. If possible, drink something warm and sweet if you are conscious and able to swallow safely.",
+                            "recommendedAction": "Provide location for nearest hospital search and continue warming measures while awaiting transport.",
                             "confidence": 0.95,
                             "blogLinks": [
-                              "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/cold-weather-safety/hypothermia.html",
-                              "https://www.mayoclinic.org/diseases-conditions/hypothermia/diagnosis-treatment/drc-20352687"
-                            ]
+                              "https://www.mayoclinic.org/first-aid/first-aid-hypothermia/basics/art-20056681",
+                              "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/winter-storm/hypothermia.html"
+                            ],
+                            "sessionId": null
                           }
                         }
                         """
