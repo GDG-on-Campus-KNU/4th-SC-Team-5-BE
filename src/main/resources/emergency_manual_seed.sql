@@ -1,85 +1,85 @@
 INSERT INTO emergency_manual (id, emergency_type, title, description, steps, warning, updated_at) VALUES
--- 🔥 화상 (BURNS)
-(1, 'BURNS', '뜨거운 물에 의한 화상', '뜨거운 물에 데였을 때 기본 응급처치입니다.',
- '1. 흐르는 찬물로 10~15분간 화상 부위를 식히세요.\n2. 깨끗한 거즈로 덮으세요.\n3. 통증이 심하면 병원 방문을 고려하세요.',
- '얼음을 직접 대거나 피부를 문지르지 마세요.', NOW()),
+-- 🔥 Burns (BURNS)
+(1, 'BURNS', 'Burns from Hot Water', 'Basic first aid for burns caused by hot water.',
+ '1. Cool the burned area under running cold water for 10-15 minutes.\n2. Cover with a clean gauze.\n3. Consider visiting a hospital if the pain is severe.',
+ 'Do not apply ice directly or rub the skin.', NOW()),
 
-(2, 'BURNS', '화학 물질에 의한 화상', '화학 약품에 노출되었을 때 응급처치 방법입니다.',
- '1. 오염 부위를 즉시 흐르는 물로 20분 이상 세척하세요.\n2. 오염된 옷을 제거하세요.\n3. 통증이 계속되거나 눈에 노출된 경우 즉시 병원에 가세요.',
- '세척 중 눈을 비비지 마세요.', NOW()),
+(2, 'BURNS', 'Chemical Burns', 'First aid for burns caused by chemical substances.',
+ '1. Immediately rinse the affected area with running water for more than 20 minutes.\n2. Remove contaminated clothing.\n3. Seek medical attention immediately if pain persists or if the eyes are exposed.',
+ 'Do not rub your eyes during rinsing.', NOW()),
 
-(3, 'BURNS', '전기에 의한 화상', '전기 사고로 인한 화상 시 대응 방법입니다.',
- '1. 전원 차단 후 접근하세요.\n2. 심정지 가능성 대비 CPR을 준비하세요.\n3. 화상 부위는 흐르는 물로 식히지 말고 병원 이송을 우선하세요.',
- '전기가 흐르는 상태에서는 환자에게 접촉하지 마세요.', NOW()),
+(3, 'BURNS', 'Electrical Burns', 'First aid for burns caused by electrical accidents.',
+ '1. Disconnect the power source before approaching.\n2. Prepare for CPR in case of cardiac arrest.\n3. Do not cool the burn with water; prioritize transporting the patient to the hospital.',
+ 'Do not touch the patient while electricity is still active.', NOW()),
 
--- 🦴 골절 (FRACTURE)
-(4, 'FRACTURE', '팔 골절', '팔이 부러진 경우의 응급처치 방법입니다.',
- '1. 부목이나 단단한 물체로 팔을 고정하세요.\n2. 움직이지 않게 하고 병원으로 이송하세요.',
- '뼈를 억지로 맞추려 하지 마세요.', NOW()),
+-- 🦴 Fracture (FRACTURE)
+(4, 'FRACTURE', 'Arm Fracture', 'First aid for a broken arm.',
+ '1. Immobilize the arm with a splint or firm object.\n2. Transport to the hospital without moving the arm.',
+ 'Do not attempt to realign the bone.', NOW()),
 
-(5, 'FRACTURE', '다리 골절', '다리가 부러졌을 때의 응급조치입니다.',
- '1. 다리 양쪽을 지지하여 고정하세요.\n2. 가능한 한 움직이지 않도록 합니다.\n3. 즉시 구급차를 부르세요.',
- '부상 부위를 심하게 흔들지 마세요.', NOW()),
+(5, 'FRACTURE', 'Leg Fracture', 'First aid for a broken leg.',
+ '1. Stabilize both sides of the leg.\n2. Minimize movement as much as possible.\n3. Call an ambulance immediately.',
+ 'Do not shake the injured area.', NOW()),
 
--- 💉 출혈 (BLEEDING)
-(6, 'BLEEDING', '코피 발생 시', '코피가 났을 때의 응급처치입니다.',
- '1. 고개를 약간 앞으로 숙이고 코를 부드럽게 압박하세요.\n2. 10분 이상 지속되면 병원에 방문하세요.',
- '고개를 뒤로 젖히지 마세요.', NOW()),
+-- 💉 Bleeding (BLEEDING)
+(6, 'BLEEDING', 'Nosebleed', 'First aid for a nosebleed.',
+ '1. Tilt the head slightly forward and gently pinch the nose.\n2. Visit a hospital if bleeding continues for more than 10 minutes.',
+ 'Do not tilt the head backward.', NOW()),
 
-(7, 'BLEEDING', '심한 출혈 발생 시', '다량의 출혈이 발생했을 때 응급조치입니다.',
- '1. 깨끗한 천으로 강하게 압박하세요.\n2. 출혈 부위를 심장보다 높게 유지하세요.\n3. 출혈이 멈추지 않으면 즉시 구급차를 부르세요.',
- '출혈 부위를 자극하거나 문지르지 마세요.', NOW()),
+(7, 'BLEEDING', 'Severe Bleeding', 'First aid for severe bleeding.',
+ '1. Firmly press the wound with a clean cloth.\n2. Keep the bleeding area elevated above the heart.\n3. Call an ambulance if bleeding does not stop.',
+ 'Do not rub or stimulate the bleeding area.', NOW()),
 
--- 🚑 심폐소생술 (CPR)
-(8, 'CPR', '성인 심정지 발생 시', '성인 대상 심폐소생술 방법입니다.',
- '1. 반응이 없는지 확인하세요.\n2. 바로 119에 신고하고 가슴 압박을 시작하세요.\n3. AED가 있을 경우 사용하세요.',
- 'AED 사용법을 모르면 119 지시에 따르세요.', NOW()),
+-- 🚑 CPR (CPR)
+(8, 'CPR', 'Adult Cardiac Arrest', 'CPR procedure for adults.',
+ '1. Check for responsiveness.\n2. Call 911 (or the local emergency number) and start chest compressions immediately.\n3. Use an AED if available.',
+ 'Follow emergency operator instructions if unfamiliar with AED use.', NOW()),
 
-(9, 'CPR', '영아 심정지 발생 시', '영아 대상 심폐소생술 방법입니다.',
- '1. 가슴 가운데를 두 손가락으로 압박하세요.\n2. 매우 부드럽게 30회 압박 + 2회 인공호흡 반복하세요.',
- '성인용 가슴 압박 강도를 적용하지 마세요.', NOW()),
+(9, 'CPR', 'Infant Cardiac Arrest', 'CPR procedure for infants.',
+ '1. Compress the center of the chest with two fingers.\n2. Gently perform 30 compressions and 2 rescue breaths.',
+ 'Do not apply adult chest compression strength to an infant.', NOW()),
 
--- 🫁 기도 막힘 (CHOKING)
-(10, 'CHOKING', '음식물로 인한 기도 막힘', '음식물이 기도를 막은 경우의 응급처치입니다.',
-    '1. 기침을 유도하세요.\n2. 효과가 없으면 하임리히법(복부 밀치기)을 시행하세요.\n3. 의식이 없으면 CPR을 즉시 시작하세요.',
-    '등을 세게 치거나 억지로 토하게 하지 마세요.', NOW()),
+-- 🦱 Choking (CHOKING)
+(10, 'CHOKING', 'Choking on Food', 'First aid for airway obstruction caused by food.',
+ '1. Encourage the person to cough.\n2. Perform abdominal thrusts (Heimlich maneuver) if ineffective.\n3. Start CPR immediately if the person becomes unconscious.',
+ 'Do not slap the back hard or forcibly induce vomiting.', NOW()),
 
-(11, 'CHOKING', '영아의 기도 막힘', '1세 미만 영아가 기도 막힘 증상을 보일 때의 대응입니다.',
-    '1. 영아를 팔에 엎드리게 하고 등을 5회 두드리세요.\n2. 가슴 압박 5회를 교차 반복하세요.\n3. 증상이 지속되면 구급차를 부르세요.',
-    '성인용 하임리히법을 영아에게 적용하지 마세요.', NOW()),
+(11, 'CHOKING', 'Infant Choking', 'Response to airway obstruction in infants under 1 year.',
+ '1. Place the infant face-down on your forearm and give 5 back blows.\n2. Perform 5 chest thrusts alternately.\n3. Call an ambulance if symptoms persist.',
+ 'Do not apply adult Heimlich maneuver to an infant.', NOW()),
 
--- 🥶 저체온증 (HYPOTHERMIA)
-(12, 'HYPOTHERMIA', '경미한 저체온증', '경미한 저체온증일 때의 응급대처법입니다.',
-    '1. 젖은 옷을 제거하고 마른 옷으로 갈아입히세요.\n2. 따뜻한 담요로 감싸세요.\n3. 따뜻한 음료(알코올 제외)를 제공합니다.',
-    '뜨거운 물에 바로 담그지 마세요.', NOW()),
+-- 🫢 Hypothermia (HYPOTHERMIA)
+(12, 'HYPOTHERMIA', 'Mild Hypothermia', 'First aid for mild hypothermia.',
+ '1. Remove wet clothing and put on dry clothing.\n2. Wrap the patient in a warm blanket.\n3. Provide warm (non-alcoholic) drinks.',
+ 'Do not immerse the patient directly into hot water.', NOW()),
 
-(13, 'HYPOTHERMIA', '중증 저체온증', '심각한 저체온증일 때의 응급처치입니다.',
-    '1. 환자를 움직이지 말고 고정된 상태를 유지하세요.\n2. 점진적으로 체온을 높입니다.\n3. 즉시 병원으로 이송하세요.',
-    '격렬한 마찰이나 급격한 체온 상승은 심장 부정맥을 유발할 수 있습니다.', NOW()),
+(13, 'HYPOTHERMIA', 'Severe Hypothermia', 'First aid for severe hypothermia.',
+ '1. Keep the patient still and avoid unnecessary movement.\n2. Gradually warm the patient.\n3. Transport immediately to a hospital.',
+ 'Do not rub the body vigorously or rewarm too rapidly.', NOW()),
 
--- ☀️ 열사병 (HEATSTROKE)
-(14, 'HEATSTROKE', '야외 활동 중 열사병', '고온 환경에서 야외 활동 중 발생한 열사병 대응법입니다.',
-    '1. 즉시 서늘한 곳으로 이동하세요.\n2. 몸을 차갑게 식히고 물을 충분히 제공합니다.\n3. 의식이 없으면 구급차를 부르세요.',
-    '의식 없는 사람에게 억지로 물을 마시게 하지 마세요.', NOW()),
+-- ☀️ Heatstroke (HEATSTROKE)
+(14, 'HEATSTROKE', 'Heatstroke During Outdoor Activities', 'First aid for heatstroke during outdoor activities.',
+ '1. Move immediately to a cool place.\n2. Cool the body and hydrate adequately.\n3. Call an ambulance if the patient is unconscious.',
+ 'Do not force water into an unconscious person.', NOW()),
 
-(15, 'HEATSTROKE', '운동 중 열사병', '운동 중 과열로 인한 열사병 발생 시 대처 방법입니다.',
-    '1. 운동을 즉시 중단하고 음영지로 이동하세요.\n2. 얼음찜질이나 찬물 샤워를 통해 체온을 낮추세요.\n3. 증상 지속 시 병원 이송.',
-    '알코올이나 카페인 음료를 피하세요.', NOW()),
+(15, 'HEATSTROKE', 'Heatstroke During Exercise', 'First aid for heatstroke caused by exercise.',
+ '1. Stop exercising and move to a shaded area.\n2. Cool the body using ice packs or a cold shower.\n3. Seek hospital care if symptoms persist.',
+ 'Avoid alcohol and caffeine.', NOW()),
 
--- ☠️ 중독 (POISONING)
-(16, 'POISONING', '약물 과다복용', '약물 오용으로 인한 중독 상황 대응입니다.',
-    '1. 복용한 약 이름과 양을 확인하세요.\n2. 억지로 토하게 하지 마세요.\n3. 즉시 응급실로 이송하세요.',
-    '임의로 해독제나 약물을 복용하지 마세요.', NOW()),
+-- ☠️ Poisoning (POISONING)
+(16, 'POISONING', 'Drug Overdose', 'First aid for drug overdose situations.',
+ '1. Identify the drug name and amount taken.\n2. Do not induce vomiting.\n3. Transport to the emergency room immediately.',
+ 'Do not administer antidotes or medicines without professional instruction.', NOW()),
 
-(17, 'POISONING', '화학 물질 중독', '화학 물질 노출로 인한 중독 대응법입니다.',
-    '1. 노출 부위를 즉시 물로 세척하세요.\n2. 오염된 옷을 제거하세요.\n3. 흡입했을 경우 신선한 공기로 이동한 뒤 병원으로 갑니다.',
-    '밀폐된 공간에 오래 머물지 마세요.', NOW()),
+(17, 'POISONING', 'Chemical Poisoning', 'First aid for chemical exposure poisoning.',
+ '1. Rinse exposed areas immediately with water.\n2. Remove contaminated clothing.\n3. Move to fresh air if inhaled and seek hospital care.',
+ 'Do not stay in confined spaces.', NOW()),
 
--- ⚡ 발작 (SEIZURE)
-(18, 'SEIZURE', '전신 발작 발생 시', '전신 발작(간질 발작 등)이 발생했을 때 대응법입니다.',
-    '1. 환자 주변의 위험물을 치웁니다.\n2. 억지로 움직이지 않게 하고, 발작이 끝날 때까지 지켜봅니다.\n3. 발작이 5분 이상 지속되면 119 신고.',
-    '발작 중 환자 입에 물건을 넣지 마세요.', NOW()),
+-- ⚡ Seizure (SEIZURE)
+(18, 'SEIZURE', 'Generalized Seizure', 'First aid for generalized seizures.',
+ '1. Clear dangerous objects around the patient.\n2. Allow the seizure to occur naturally without restraining.\n3. Call emergency services if the seizure lasts more than 5 minutes.',
+ 'Do not put objects in the patient’s mouth.', NOW()),
 
-(19, 'SEIZURE', '부분 발작 발생 시', '부분 발작(손떨림, 의식 부분 소실) 발생 시 응급처치입니다.',
-    '1. 조용한 곳으로 환자를 이동시켜 안정을 취하게 합니다.\n2. 발작 후 완전히 의식을 회복할 때까지 관찰하세요.',
-    '환자가 깨어나도 혼란스러울 수 있으므로 무리하게 질문하지 마세요.', NOW());
+(19, 'SEIZURE', 'Partial Seizure', 'First aid for partial seizures.',
+ '1. Move the patient to a quiet place and let them rest.\n2. Monitor until full recovery of consciousness.',
+ 'Do not overwhelm the patient with questions after awakening.', NOW());
