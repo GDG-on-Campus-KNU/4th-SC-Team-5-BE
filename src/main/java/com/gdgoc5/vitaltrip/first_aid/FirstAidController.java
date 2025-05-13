@@ -82,9 +82,18 @@ public class FirstAidController {
                                     name = "초기 상담 요청 예시",
                                     value = """
                                     {
-                                      "emergencyType": "HYPOTHERMIA",
-                                      "userMessage": "It's so cold I can't feel my hands."
-                                    }
+                                       "result": "SUCCESS",
+                                       "message": "요청이 성공적으로 처리되었습니다.",
+                                       "data": {
+                                         "content": "Your situation sounds serious. Because you can't feel your hands, this could be the start of hypothermia. First, get out of the cold immediately. Find a warm place indoors, if possible. Remove any wet clothing. If you can't get indoors, find shelter from the wind and rain. Gently warm your hands, avoiding direct heat like a fire or hot water bottle, as this can cause burns. Try to warm your core first by layering dry blankets or clothing. Drink warm, non-alcoholic, non-caffeinated beverages, like broth or herbal tea if available. Monitor yourself closely. If your condition worsens, you develop confusion, or you have trouble shivering, seek immediate medical attention by calling emergency services.",
+                                         "recommendedAction": "Seek immediate medical attention if symptoms worsen or confusion develops.",
+                                         "confidence": 0.95,
+                                         "blogLinks": [
+                                           "https://www.rei.com/learn/expert-advice/hypothermia.html",
+                                           "https://www.mayoclinic.org/first-aid/first-aid-hypothermia/basics/art-20056683"
+                                         ]
+                                       }
+                                     }
                                     """
                             )
                     )
@@ -161,10 +170,13 @@ public class FirstAidController {
                           "result": "SUCCESS",
                           "message": "요청이 성공적으로 처리되었습니다.",
                           "data": {
-                            "content": "Since you are asking for the nearest hospital, your condition likely requires immediate medical attention. Continue any warming measures you are able to safely administer (remove wet clothing, add dry layers, seek shelter if not already there), but prioritize getting to a hospital. Use your phone to search for the closest emergency room (ER) or dial your local emergency number (like 911 in the US) for immediate transport. Don't delay transport to find the 'best' hospital; the closest one is the priority right now.",
-                            "recommendedAction": "Go to the nearest emergency room (ER) immediately. Call local emergency number if needed for transport.",
-                            "confidence": 1.0,
-                            "suggestedPhrase": "I think I have severe hypothermia. I'm feeling [mention specific symptoms like shivering, confusion, drowsiness]. I need help immediately."
+                            "content": "While I cannot provide specific medical facility recommendations due to safety and real-time information limitations, immediately call emergency services (like 911 or your local emergency number). They can dispatch an ambulance and direct you to the nearest appropriate hospital equipped to handle hypothermia. Continue providing first aid while waiting: gently move the person to a warmer location if possible, remove any wet clothing and replace it with dry layers, and cover them with blankets. If they are conscious, offer warm (not hot) sweet drinks. Avoid rubbing their limbs vigorously as this can cause further harm.",
+                            "recommendedAction": "Call emergency services immediately and provide first aid while waiting for help.",
+                            "confidence": 0.95,
+                            "blogLinks": [
+                              "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/cold-weather-safety/hypothermia.html",
+                              "https://www.mayoclinic.org/diseases-conditions/hypothermia/diagnosis-treatment/drc-20352687"
+                            ]
                           }
                         }
                         """

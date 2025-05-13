@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
+import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -118,17 +119,23 @@ public class FirstAidService {
         String prompt = intro + "\n" +
                 "- Emergency Type: " + emergencyType + "\n" +
                 "- User Message: \"" + userMessage + "\"\n" +
-                "Based on this information, please provide appropriate first aid advice, and suggest a phrase that the user can say directly to local medical personnel (written from the user's perspective, using first-person pronouns like 'I', 'my'). The response must strictly follow the JSON format below:\n" +
+                "Based on this information, provide first aid advice without using markdown formatting like **bold**.\n" +
+                "Additionally, suggest two blog article links that explain self-care methods related to the symptoms.\n" +
+                "The response must strictly follow the JSON format below:\n" +
                 "{\n" +
                 "  \"c\": \"Advice text\",\n" +
                 "  \"recommendedAction\": \"Recommended action\",\n" +
                 "  \"confidence\": number (0.0 ~ 1.0),\n" +
-                "  \"suggestedPhrase\": \"Phrase the user can say to local medical personnel (written in first-person)\"\n" +
+                "  \"blogLinks\": [\"link1\", \"link2\"]\n" +
                 "}";
 
         return Map.of(
                 "contents", List.of(
-                        Map.of("parts", List.of(Map.of("text", prompt)))
+                        Map.of(
+                                "parts", List.of(
+                                        Map.of("text", prompt)
+                                )
+                        )
                 )
         );
     }
@@ -170,9 +177,11 @@ public class FirstAidService {
             String content = parsed.get("c").asText();
             String recommendedAction = parsed.get("recommendedAction").asText();
             double confidence = parsed.get("confidence").asDouble();
-            String suggestedPhrase = parsed.get("suggestedPhrase").asText();
 
-            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence, suggestedPhrase);
+            List<String> blogLinks = new ArrayList<>();
+            parsed.get("blogLinks").forEach(node -> blogLinks.add(node.asText()));
+
+            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence, blogLinks);
         } catch (Exception e) {
             log.error("Gemini 응답 파싱 중 오류 발생", e);
             throw new RuntimeException("Gemini 응답 파싱 중 오류 발생", e);
