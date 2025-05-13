@@ -158,7 +158,7 @@ public class FirstAidService {
             }
 
             String jsonString = root.at("/candidates/0/content/parts/0/text").asText().trim();
-            log.info("jsonString: {}", jsonString);
+            log.debug("jsonString: {}", jsonString);
             if (jsonString.startsWith("```json")) {
                 jsonString = jsonString.replaceFirst("```json", "").trim();
             }
