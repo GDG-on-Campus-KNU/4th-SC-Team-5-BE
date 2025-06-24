@@ -2,6 +2,7 @@ package com.gdgoc5.vitaltrip.first_aid;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gdgoc5.vitaltrip.exception.NotFoundException;
 import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatAdviceResponse;
 import com.gdgoc5.vitaltrip.first_aid.dto.EmergencyChatMessageResponse;
 import com.gdgoc5.vitaltrip.first_aid.entity.EmergencyChatMessage;
@@ -78,7 +79,7 @@ public class FirstAidService {
         }
 
         EmergencyChatSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 세션을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 세션을 찾을 수 없습니다."));
 
         Map<String, Object> payload = makeEmergencyPrompt(session.getEmergencyType(), userMessage, true);
         EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload, EmergencyType.valueOf(session.getEmergencyType()));
