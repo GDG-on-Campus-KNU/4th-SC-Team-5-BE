@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
-import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -49,7 +48,7 @@ public class FirstAidService {
         }
 
         Map<String, Object> payload = makeEmergencyPrompt(emergencyType, userMessage, false);
-        EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload);
+        EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload, EmergencyType.valueOf(emergencyType));
 
         UUID sessionId = UUID.randomUUID();
         EmergencyChatSession session = new EmergencyChatSession();
@@ -81,7 +80,7 @@ public class FirstAidService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 세션을 찾을 수 없습니다."));
 
         Map<String, Object> payload = makeEmergencyPrompt(session.getEmergencyType(), userMessage, true);
-        EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload);
+        EmergencyChatAdviceResponse advice = callGeminiAndParseResponse(payload, EmergencyType.valueOf(session.getEmergencyType()));
 
         saveEmergencyChatMessages(userMessage, advice, session);
         return advice;
@@ -144,7 +143,7 @@ public class FirstAidService {
         );
     }
 
-    private EmergencyChatAdviceResponse callGeminiAndParseResponse(Map<String, Object> payload) {
+    private EmergencyChatAdviceResponse callGeminiAndParseResponse(Map<String, Object> payload, EmergencyType emergencyType) {
         WebClient webClient = WebClient.builder()
                 .baseUrl("https://generativelanguage.googleapis.com")
                 .defaultHeader("Content-Type", "application/json")
@@ -182,9 +181,21 @@ public class FirstAidService {
             String recommendedAction = parsed.get("recommendedAction").asText();
             double confidence = parsed.get("confidence").asDouble();
 
-            List<String> blogLinks = new ArrayList<>();
-            parsed.get("blogLinks").forEach(node -> blogLinks.add(node.asText()));
-
+            List<String> blogLinks = switch (emergencyType) {
+                case BLEEDING -> List.of("https://www.webmd.com/first-aid/bleeding-cuts-wounds", "https://www.medicalnewstoday.com/articles/319433");
+                case BURNS -> List.of("https://www.nhs.uk/conditions/burns-and-scalds/treatment/", "https://www.mayoclinic.org/first-aid/first-aid-burns/basics/art-20056649");
+                case FRACTURE -> List.of("https://my.clevelandclinic.org/health/diseases/15241-bone-fractures", "https://www.betterhealth.vic.gov.au/health/conditionsandtreatments/bone-fractures");
+                case CPR -> List.of("https://thecprsolution.net/", "https://www.yourcprsolution.com/");
+                case CHOKING -> List.of("https://www.mayoclinic.org/first-aid/first-aid-choking/basics/art-20056637", "https://my.clevelandclinic.org/health/diseases/choking");
+                case ELECTRIC_SHOCK -> List.of("https://www.mayoclinic.org/first-aid/first-aid-electrical-shock/basics/art-20056695", "https://www.safetyfirstaid.co.uk/electric-shock-first-aid-treatment/");
+                case HYPOTHERMIA -> List.of("https://www.mayoclinic.org/diseases-conditions/hypothermia/diagnosis-treatment/drc-20352688", "https://www.redcross.org/take-a-class/resources/learn-first-aid/hypothermia?srsltid=AfmBOoobkxTEZcuHG-ypoa2XfzZtjrxl4fxqX8yVjMB0V0BUljWv9lZq");
+                case HEATSTROKE -> List.of("https://www.mayoclinic.org/first-aid/first-aid-heatstroke/basics/art-20056655", "https://my.clevelandclinic.org/health/diseases/21812-heatstroke");
+                case POISONING -> List.of("https://www.mayoclinic.org/first-aid/first-aid-poisoning/basics/art-20056657", "https://www.webmd.com/first-aid/poisoning-treatment");
+                case SEIZURE -> List.of("https://www.mayoclinic.org/diseases-conditions/seizure/diagnosis-treatment/drc-20365730", "https://www.healthdirect.gov.au/seizures");
+                case ANIMAL_BITE -> List.of("https://www.mayoclinic.org/first-aid/first-aid-animal-bites/basics/art-20056591", "https://medlineplus.gov/ency/patientinstructions/000734.htm");
+                case ASTHMA_ATTACK -> List.of("https://www.mayoclinic.org/diseases-conditions/asthma-attack/diagnosis-treatment/drc-20354274", "https://www.healthline.com/health/emergency-home-remedies-for-asthma-attacks");
+                case HEART_ATTACK -> List.of("https://my.clevelandclinic.org/health/diseases/16818-heart-attack-myocardial-infarction", "https://www.nhs.uk/conditions/heart-attack/treatment/");
+            };
             return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence, blogLinks);
         } catch (Exception e) {
             log.error("Gemini 응답 파싱 중 오류 발생", e);
