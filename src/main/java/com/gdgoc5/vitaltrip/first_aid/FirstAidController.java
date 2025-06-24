@@ -82,19 +82,9 @@ public class FirstAidController {
                                     name = "초기 상담 요청 예시",
                                     value = """
                                     {
-                                        "result": "SUCCESS",
-                                        "message": "요청이 성공적으로 처리되었습니다.",
-                                        "data": {
-                                          "content": "Your core body temperature is likely dangerously low (hypothermia). This is a serious medical emergency. Seek immediate medical attention; call emergency services (911 or your local emergency number) or have someone drive you to the nearest hospital right away. While waiting for help: Move to a warm place, if possible. Remove any wet clothing. If you can't move to a warmer place, protect yourself from the elements. Cover your head, neck, and groin. Try to get into dry clothes. If dry clothes aren't available, wring out wet clothes as much as possible. Drink warm, sweet fluids (like sugary tea or juice) if you are alert and able to swallow. Avoid alcohol. Apply warm compresses to your neck, armpits, and groin. Do not apply direct heat to your extremities (like hands and feet) as this can cause further damage. Monitor breathing and level of consciousness. Be prepared to administer CPR if needed.",
-                                          "recommendedAction": "Call emergency services immediately.",
-                                          "confidence": 0.95,
-                                          "blogLinks": [
-                                            "https://www.rei.com/learn/expert-advice/hypothermia.html",
-                                            "https://www.mayoclinic.org/diseases-conditions/hypothermia/diagnosis-treatment/drc-20352687"
-                                          ],
-                                          "sessionId": "98bc616c-447f-40dc-81a7-34e42cb255fc"
-                                        }
-                                      }
+                                          "emergencyType": "HYPOTHERMIA",
+                                          "userMessage": "I can't feel my hands. It's really cold."
+                                    }
                                     """
                             )
                     )

@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Slf4j
 @Service
@@ -114,6 +115,30 @@ public class FirstAidService {
     }
 
 
+
+    private double evaluateConfidence(String content, EmergencyType type) {
+        List<String> essentialKeywords = switch (type) {
+            case BLEEDING -> List.of("pressure", "bleeding", "bandage", "wound");
+            case BURNS -> List.of("cool", "running water", "burn", "ointment");
+            case FRACTURE -> List.of("immobilize", "fracture", "splint", "swelling");
+            case CPR -> List.of("chest compressions", "CPR", "check responsiveness", "call emergency");
+            case CHOKING -> List.of("Heimlich", "choking", "cough", "back blows");
+            case ELECTRIC_SHOCK -> List.of("electric shock", "unplug", "do not touch", "CPR");
+            case HYPOTHERMIA -> List.of("warm", "hypothermia", "blanket", "remove wet clothes");
+            case HEATSTROKE -> List.of("cool", "heatstroke", "shade", "hydrate");
+            case POISONING -> List.of("poison", "do not induce vomiting", "toxin", "call poison control");
+            case SEIZURE -> List.of("seizure", "protect head", "do not restrain", "stay with");
+            case ANIMAL_BITE -> List.of("animal bite", "clean wound", "tetanus", "rabies");
+            case ASTHMA_ATTACK -> List.of("inhaler", "asthma", "sit upright", "breathe slowly");
+            case HEART_ATTACK -> List.of("chest pain", "heart attack", "call emergency", "aspirin");
+        };
+
+        long matched = essentialKeywords.stream()
+                .filter(word -> content.toLowerCase().contains(word.toLowerCase()))
+                .count();
+
+        return Math.max(0.3, (double) matched / essentialKeywords.size());
+    }
     private Map<String, Object> makeEmergencyPrompt(String emergencyType, String userMessage, boolean isFollowUp) {
         String intro = isFollowUp
                 ? "The following is a follow-up message from the user during the ongoing emergency consultation session."
@@ -124,6 +149,7 @@ public class FirstAidService {
                 "- User Message: \"" + userMessage + "\"\n" +
                 "Based on this information, provide first aid advice without using markdown formatting like **bold**.\n" +
                 "Additionally, suggest two blog article links that explain self-care methods related to the symptoms.\n" +
+                "The 'confidence' field must be a number between 0.0 and 1.0 indicating how confident you are in the accuracy and reliability of the advice you are providing. Set this value based on your understanding of the situation.\n" +
                 "The response must strictly follow the JSON format below:\n" +
                 "{\n" +
                 "  \"c\": \"Advice text\",\n" +
@@ -179,7 +205,12 @@ public class FirstAidService {
             JsonNode parsed = mapper.readTree(jsonString);
             String content = parsed.get("c").asText();
             String recommendedAction = parsed.get("recommendedAction").asText();
-            double confidence = parsed.get("confidence").asDouble();
+
+            double modelConfidence = parsed.get("confidence").asDouble();
+            System.out.println("modelConfidence = " + modelConfidence);
+            double evaluatedConfidence = evaluateConfidence(content, emergencyType);
+            System.out.println("evaluatedConfidence = " + evaluatedConfidence);
+            double finalConfidence = (modelConfidence * 0.7) + (evaluatedConfidence * 0.3);
 
             List<String> blogLinks = switch (emergencyType) {
                 case BLEEDING -> List.of("https://www.webmd.com/first-aid/bleeding-cuts-wounds", "https://www.medicalnewstoday.com/articles/319433");
@@ -196,7 +227,9 @@ public class FirstAidService {
                 case ASTHMA_ATTACK -> List.of("https://www.mayoclinic.org/diseases-conditions/asthma-attack/diagnosis-treatment/drc-20354274", "https://www.healthline.com/health/emergency-home-remedies-for-asthma-attacks");
                 case HEART_ATTACK -> List.of("https://my.clevelandclinic.org/health/diseases/16818-heart-attack-myocardial-infarction", "https://www.nhs.uk/conditions/heart-attack/treatment/");
             };
-            return EmergencyChatAdviceResponse.from(content, recommendedAction, confidence, blogLinks);
+
+
+            return EmergencyChatAdviceResponse.from(content, recommendedAction, finalConfidence, blogLinks);
         } catch (Exception e) {
             log.error("Gemini 응답 파싱 중 오류 발생", e);
             throw new RuntimeException("Gemini 응답 파싱 중 오류 발생", e);
